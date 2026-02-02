@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Kaçan Kare</title>
+  <style>
+    body {
+      background: black;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+    canvas {
+      background: #111;
+      border: 2px solid white;
+      display: none;
+      margin: auto;
+    }
+    .ekran {
+      max-width: 600px;
+      margin: auto;
+      margin-top: 80px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BAŞLANGIÇ EKRANI -->
+<div id="intro" class="ekran">
+  <h1>🟩 KAÇAN KARE</h1>
+  <p>
+    Bu dünyada her şey seni yakalamaya çalışıyor.<br>
+    Zaman, korku, hatalar…<br><br>
+    Sen sadece bir karesin.<br>
+    Kaçabildiğin kadar yaşa.
+  </p>
+  <p><b>W A S D</b> ile hareket et</p>
+  <button onclick="basla()">OYUNA BAŞLA</button>
+</div>
+
+<!-- OYUN -->
+<p id="bilgi" style="display:none;">
+  Skor: <span id="skor">0</span> | Can: <span id="can">❤️❤️❤️</span>
+</p>
+<canvas id="oyun" width="400" height="400"></canvas>
+
+<!-- OYUN BİTTİ -->
+<div id="gameover" class="ekran" style="display:none;">
+  <h1>💀 OYUN BİTTİ</h1>
+  <p>
+    Ne kadar kaçarsan kaç,<br>
+    bazen yakalanırsın.
+  </p>
+  <p>Skorun: <span id="finalSkor"></span></p>
+  <button onclick="location.reload()">YENİDEN OYNA</button>
+</div>
+
+<script>
+const canvas = document.getElementById("oyun");
+const ctx = canvas.getContext("2d");
+
+const intro = document.getElementById("intro");
+const gameover = document.getElementById("gameover");
+const bilgi = document.getElementById("bilgi");
+
+const skorYazi = document.getElementById("skor");
+const canYazi = document.getElementById("can");
+const finalSkor = document.getElementById("finalSkor");
+
+let oyuncu, dusmanlar, skor, can, oyunBitti;
+
+function basla() {
+  intro.style.display = "none";
+  canvas.style.display = "block";
+  bilgi.style.display = "block";
+  oyunuBaslat();
+}
+
+function oyunuBaslat() {
+  oyuncu = { x: 180, y: 180, size: 20, speed: 5 };
+  dusmanlar = [];
+  skor = 0;
+  can = 3;
+  oyunBitti = false;
+  canGuncelle();
+  dusmanEkle();
+  dusmanEkle();
+  oyunDongusu();
+}
+
+function dusmanEkle() {
+  dusmanlar.push({
+    x: Math.random() * 360,
+    y: Math.random() * 360,
+    size: 20,
+    speedX: (Math.random()<0.5?-1:1)*(2+Math.random()*2),
+    speedY: (Math.random()<0.5?-1:1)*(2+Math.random()*2)
+  });
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key==="w") oyuncu.y -= oyuncu.speed;
+  if (e.key==="s") oyuncu.y += oyuncu.speed;
+  if (e.key==="a") oyuncu.x -= oyuncu.speed;
+  if (e.key==="d") oyuncu.x += oyuncu.speed;
+
+  oyuncu.x = Math.max(0, Math.min(380, oyuncu.x));
+  oyuncu.y = Math.max(0, Math.min(380, oyuncu.y));
+});
+
+function carpistiMi(a,b){
+  return a.x<b.x+b.size && a.x+a.size>b.x &&
+         a.y<b.y+b.size && a.y+a.size>b.y;
+}
+
+function canGuncelle(){
+  canYazi.innerText = "❤️".repeat(can);
+}
+
+function oyunDongusu(){
+  if(oyunBitti) return;
+
+  ctx.clearRect(0,0,400,400);
+
+  ctx.fillStyle="lime";
+  ctx.fillRect(oyuncu.x,oyuncu.y,oyuncu.size,oyuncu.size);
+
+  ctx.fillStyle="red";
+  dusmanlar.forEach(d=>{
+    d.x+=d.speedX;
+    d.y+=d.speedY;
+    if(d.x<=0||d.x>=380) d.speedX*=-1;
+    if(d.y<=0||d.y>=380) d.speedY*=-1;
+    ctx.fillRect(d.x,d.y,d.size,d.size);
+
+    if(carpistiMi(oyuncu,d)){
+      can--;
+      canGuncelle();
+      oyuncu.x=180; oyuncu.y=180;
+      if(can<=0){
+        oyunBitti=true;
+        canvas.style.display="none";
+        bilgi.style.display="none";
+        gameover.style.display="block";
+        finalSkor.innerText=skor;
+      }
+    }
+  });
+
+  skor++;
+  skorYazi.innerText=skor;
+  if(skor%500===0) dusmanEkle();
+
+  requestAnimationFrame(oyunDongusu);
+}
+</script>
+
+</body>
+</html>
